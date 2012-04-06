@@ -66,6 +66,7 @@ git-init:
 	(cd ${GIT_DIRECTORY} && git init)
 	(cd ${GIT_DIRECTORY} && git remote add ${GIT_REMOTE_NAME} ${GIT_REMOTE_URL})
 
+# TODO Makfile.snapshot
 snapshot:
 	@echo "===> ${.TARGET}"
 .if defined(USE_ZFS)
