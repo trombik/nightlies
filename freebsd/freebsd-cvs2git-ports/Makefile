@@ -5,6 +5,9 @@ USE_ZFS_SNAPSHOT?=
 CSUP?=				csup
 CSUP_FLAGS?=		-L2
 CSUP_HOST?=			cvsup.freebsd.org
+CVSROOT_NAME?=		cvsroot
+GIT_NAME?=			gitrepo
+CSUP_BASE_NAME?=	csup_db
 
 .if defined(USE_SUDO)
 SUDO=	sudo
@@ -13,19 +16,20 @@ SUDO=	sudo
 .if defined(USE_ZFS)
 ZFS_SNAPSHOTNAME!=	date +%F_%T
 BASE_DATASET?=		rpool/ports_cvs
-CVSROOT_DATASET?=	cvsroot
-GIT_DATASET?=		gitrepo
+CVSROOT_DATASET?=	${CVSROOT_NAME}
+GIT_DATASET?=		${GIT_NAME}
 BASE_DIRECTORY!=	${SUDO} zfs get -H -Ovalue mountpoint ${BASE_DATASET}
 CVSROOT_DIRECTORY!=	${SUDO} zfs get -H -Ovalue mountpoint ${BASE_DATASET}/${CVSROOT_DATASET}
 GIT_DIRECTORY!=		${SUDO} zfs get -H -Ovalue mountpoint ${BASE_DATASET}/${GIT_DATASET}
-CSUP_BASE?=			/ports_cvs/csup_db
+CSUP_BASE?=			/ports_cvs/${CSUP_BASE_NAME}
 .else
 BASE_DIRECTORY?=	ports_cvs
-CVSROOT_DIRECTORY?=	${BASE_DIRECTORY}/cvsroot
-GIT_DIRECTORY?=		${BASE_DIRECTORY}/gitrepo
-CSUP_BASE?=			${BASE_DIRECTORY}/csup_db
+CVSROOT_DIRECTORY?=	${BASE_DIRECTORY}/${CVSROOT_NAME}
+GIT_DIRECTORY?=		${BASE_DIRECTORY}/${GIT_NAME}
+CSUP_BASE?=			${BASE_DIRECTORY}/${CSUP_BASE_NAME}
 .endif
 SUPFILE?=			${BASE_DIRECTORY}/cvs-supfile
+CSUP_PREFIX?=		${.CURDIR}/${BASE_DIRECTORY}/${CVSROOT_NAME}
 
 all:	snapshot csup cvscvt git-fetch rm-cvsignore git-pull git-push
 
@@ -37,7 +41,7 @@ mkdir-all:
 
 csup:
 	@echo "===> ${.TARGET}"
-	(cd ${BASE_DIRECTORY} && ${CSUP} ${CSUP_FLAGS} ${SUPFILE})
+	${CSUP} ${CSUP_FLAGS} ${SUPFILE}
 
 cvscvt:
 	@echo "===> ${.TARGET}"
@@ -80,7 +84,7 @@ supfile:
 	@echo "# automatically created by Makefile" > ${SUPFILE}
 	@echo "*default host=${CSUP_HOST}" >> ${SUPFILE}
 	@echo "*default base=${CSUP_BASE}" >> ${SUPFILE}
-	@echo "*default prefix=${CVSROOT_DIRECTORY}" >> ${SUPFILE}
+	@echo "*default prefix=${CSUP_PREFIX}" >> ${SUPFILE}
 	@echo "*default release=cvs" >> ${SUPFILE}
 	@echo "*default delete use-rel-suffix" >> ${SUPFILE}
 	@echo "*default compress" >> ${SUPFILE}
